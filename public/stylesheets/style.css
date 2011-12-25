@@ -1,0 +1,149 @@
+@import url(http://fonts.googleapis.com/css?family=Crete+Round&subset=latin,latin-ext);
+@import url(http://fonts.googleapis.com/css?family=Comfortaa:400,700);
+* {
+	-moz-user-select: none;-webkit-user-select: none;
+}
+
+body {
+  padding: 0px;
+	margin: 0px;
+  font: 14px "Crete Round", Helvetica, Arial, sans-serif;
+	background-color: rgba(0,64,128,0.3);
+}
+
+a {
+  color: #00B7FF;
+}
+
+#frig {
+	position: fixed;
+	top: 2%; left: 2%; bottom: 2%; right: 2%;
+/*	position: absolute; width: 3000px; height: 3000px;*/
+	border: 2px groove rgba(0,0,0,0.1);
+	cursor: none;
+}
+
+#frig .title {
+	font-family: "Comfortaa","Crete Round", "Helvetica";
+	font-size: 16px;
+	background: transparent;
+	top: -3%; left: 3%;
+	color: #333;
+	text-shadow: 0 1px white;
+	-moz-user-select: none;-webkit-user-select: none;
+}
+
+#frig .bg {
+	position: fixed;
+	top: 0px; bottom: 0px; left: 0px; right: 0px;
+	background-image: url('/images/bg.png');
+	opacity: 0.5;
+	-moz-user-select: none;-webkit-user-select: none;
+}
+
+#frig .mags {
+	position: absolute;
+	padding: 2%;
+	top: 0px; left: 0px; right: 0px; bottom: 0px;
+	border: 2px groove rgba(0,0,0,0.1);
+	cursor: none;
+}
+
+#frig .clients {
+	position: absolute;
+	padding: 2%;
+	top: 0px; left: 0px; right: 0px; bottom: 0px;
+	cursor: none;
+}
+
+
+
+.mag {
+	position: absolute;
+	border: 1px solid black;
+	border-top: 1px solid #999;
+	border-left: 1px solid #999;
+	padding: 2px;
+	cursor: pointer;
+	background-color: white;
+	-webkit-transform-origin: 50% 50%;
+	-moz-transform-origin: 50% 50%;
+	cursor: move;
+	overflow: hidden;
+	-moz-user-select: none;-webkit-user-select: none;
+}
+
+.mag img {
+	max-width: 40px;
+	max-height: 40px;
+	-moz-user-select: none;-webkit-user-select: none;
+}
+
+.mag.held {
+/*	background-color: #CDE9D1;*/
+/*	box-shadow: 2px 2px 5px #bbb;*/
+}
+
+.client {
+	background-color: 'red';
+	border-radius: 14px;
+	width: 14px; height: 14px;
+	position: absolute;
+	pointer-events: none;
+}
+
+#geobot .credits {
+	position: fixed;
+	left: 100%;
+	top: 50%;
+	font-size: 180%;
+	font-family: "Comfortaa","Helvetica";
+	white-space: nowrap;
+	color: black;
+	font-weight: bold;
+	text-shadow: 0 1px white;
+	-moz-user-select: none;-webkit-user-select: none;
+}
+
+.brought {
+	display: inline;
+}
+
+.enjoy {
+	display: none;
+}
+
+#geobot .logo {
+	position: fixed;
+	width: 20%;
+	-moz-user-select: none;-webkit-user-select: none;
+	cursor: pointer;
+}
+
+.logo.hid {
+	top: 93%; right: 92%;
+	-webkit-transform: rotate(30deg); -moz-transform: rotate(30deg);
+}
+
+.logo.vis {
+	bottom: 0px;
+	right: 70%;
+	-webkit-transform: rotate(0deg); -moz-transform: rotate(0deg);
+}
+
+.logo.offScreen {
+	bottom: 0px;
+	right: 110%;
+}
+
+#geobot .logo.hid:hover {
+	top: 88%; right: 90%;
+}
+
+#geobot .form {
+	position: absolute;
+	top: 30%; left: 20%;
+	font-size: 160%;
+	font-family: "Comfortaa","Helvetica";
+	display: none;
+}
