@@ -41,11 +41,7 @@ var ObjectId = Schema.ObjectId;
 
 var FrigSchema = new Schema({
 	code: String,
-	config: [{any: {}}],
-	initialMags: [{any: {}}],
-	history: [{any: {}}],
-	mags: [{any: {}}],
-	clients: [{any: {}}]
+	data: {any: {}}
 });
 
 mongoose.model('frig',FrigSchema);
@@ -53,6 +49,8 @@ var frigModel = mongoose.model('frig');
 
 var ktch = skitchen.kitchen;
 var frig = new ktch.Frig();
+var frigs = [];
+var clientGroups = [];
 
 frig.save = function() {
 	console.log('saving frig');
@@ -78,15 +76,12 @@ traverse = function(o,func) {
 
 //console.log(JSON.stringify(frig.mags.models));
 
-everyone.now.server = {
+svr = {
 	
-	saveNew: function(f,cb) {
+	saveNew: function(code,cb) {
 		var f = new frigModel({
 			code: code, 
-			config: frig.get('config'),
-			initialMags: frig.mags.toJSON(),
-			mags: frig.mags.toJSON(),
-			clients: frig.clients.toJSON()
+			data: frigs[code].xport()
 		});
 		console.log(f);
 		f.save(function(resp) {
@@ -95,7 +90,7 @@ everyone.now.server = {
 		});
 	},
 
-	pump: function(configJSON) {
+	pump: function(code,configJSON) {
 		
 		var wordArr = [];
 		
@@ -105,15 +100,15 @@ everyone.now.server = {
 			}
 		});
 		
-		frig.mags.reset();
+		frigs[code].mags.reset();
 		wordArr.forEach(function(w) {
 			var m = w.match(/^([a-zA-Z\?\.\$!]*)([0-9])$/);
 			if (m) {
 				for (i=0;i<m[2];i++) {
-					frig.mags.addWord(m[1]);
+					frigs[code].mags.addWord(m[1]);
 				}
 			} else {
-				frig.mags.addWord(w);
+				frigs[code].mags.addWord(w);
 			}
 		});
 	},
@@ -134,20 +129,22 @@ everyone.now.server = {
 	
 	
 	updateMag: function(clientId,m) {
+		var code = clientGroups[clientId];
 		//console.log('recvd mag update from client '+clientId,JSON.stringify(m));
 		m.lastTouchedBy = 'server';
 		//console.log('ltb changed '+JSON.stringify(m));
-		frig.mags.get(m.id).set(m,{silent:true});
-		frig.save();
+		frigs[code].mags.get(m.id).set(m,{silent:true});
+		frigs[code].save();
 		everyone.exclude([clientId]).now.client.updateMag(m);
 	},
 	
 	updateClient: function(c) {
+		var code = clientGroups[c.clientId];
 		//console.log('recvd client update from client '+c.clientId,JSON.stringify(c));
-		frig.clients.getByClientId(c.clientId,function(cl) {
+		frigs[code].clients.getByClientId(c.clientId,function(cl) {
 			cl.set(c,{silent:true});
 		});
-		frig.save();
+		frigs[code].save();
 		everyone.exclude([c.clientId]).now.client.updateClient(c);
 	},
 	
@@ -155,8 +152,18 @@ everyone.now.server = {
 		this.mags = mags;
 	},
 	
-	getLatest: function(clientId,cb) {
-		cb(frig.xport());
+	getFrig: function(code,cb) {
+		if (typeof(frigs[code]) == 'undefined') {
+			console.log('having to get fridge from db...'+code);
+			frigModel.findOne({code: code}, function(err,fr) {
+				console.log('inside the anon function');
+				frigs[code] = new ktch.Frig();
+				frigs[code].mport(fr.data.toObject());
+				cb(frigs[code].xport());
+			});
+		} else {
+			cb(frigs[code].xport());
+		}
 	},
 	
 	getMags: function(clientId, cb) {
@@ -170,18 +177,38 @@ everyone.now.server = {
 		});
 	},
 	
-	connectClient: function(clientId,id,cb) {
-		//console.log('trying to connect '+clientId);
-		frig.clients.connect(clientId,id,function(c) {
-			everyone.exclude([clientId]).now.client.addClient(c);
-			cb(c.toJSON());
+	connectClient: function(clientId,code,cb) {
+		var th = this;
+		var grp = nowjs.getGroup(code);
+		grp.addUser(clientId);
+		clientGroups[clientId] = code;
+		svr.getFrig(code, function(f) {
+			frigs[code].clients.connect(clientId,function(c) {
+				if (grp.exclude([clientId]).now.client) {
+					grp.exclude([clientId]).now.client.addClient(c);
+				}
+				cb(c,f);
+			});
+			
 		});
 	}
 	
 };
 
+everyone.now.server = svr;
+
 nowjs.on('disconnect',function() {
-	frig.clients.disconnect(this.user.clientId);
-	frig.save();
-	everyone.exclude([this.user.clientId]).now.client.removeClient(this.user.clientId);
+	var self = this.user;
+	console.log(self.clientId+' just disconnected');
+	var grpCode = clientGroups[self.clientId];
+	if (frigs[grpCode]) {
+		frigs[grpCode].clients.disconnect(self.clientId);
+		frigs[grpCode].save();
+	}
+	var grp = nowjs.getGroup(grpCode);
+	grp.count(function(c) {
+		if (c) {
+			grp.now.client.removeClient(self.clientId);
+		}
+	});
 });

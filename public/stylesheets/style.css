@@ -147,3 +147,21 @@ a {
 	font-family: "Comfortaa","Helvetica";
 	display: none;
 }
+
+.introCont {
+	position: fixed;
+	top: 0px; left: 0px; right: 0px; bottom: 0px;
+	background-color: rgba(0,0,0,0.5);
+}
+
+.intro {
+	position: absolute;
+	width: 50%;
+	height: 50%;
+	background-color: white;
+	color: #333;
+	box-shadow: 2px 2px 5px #333;
+	padding: 15px;
+	font-size: 14px;
+	font-family: Helvetica, Arial;
+}

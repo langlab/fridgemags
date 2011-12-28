@@ -1,31 +1,61 @@
-console.log('entry');
-window.kitchen = require('./kitchen');
+window.debug = true;
+window.lg = function (str) {
+	if (window.debug == true) {
+		console.log(str);
+	}
+}
 
-var Session = Backbone.Router.extend({
-	initialize: function() {
+window.kitchen = require('./kitchen');
+window.views = require('./views');
+
+
+window.getMe = function(cb) { // function to quickly get my client object
+	window.frig.clients.getByClientId(now.core.clientId, cb);
+}
+
+
+var Router = Backbone.Router.extend({
+	
+	routes: {
+		'go/:code': 'go',
+		'intro':'intro'
+	},
+	
+	go: function(code) {
+		if (!localStorage['fS'+code]) { // if client previously visited this page
+			var introView = new views.IntroView();
+		}
+		var introView = new views.IntroView();
+		now.server.connectClient(now.core.clientId,code,function(newClient,updatedFrig) {
+			console.log(updatedFrig);
+			window.frig = new kitchen.Frig();
+			window.frig.mport(updatedFrig);
+			window.client = newClient;
+			window.localStorage['fS'+code] = now.core.clientId;
+
+			window.getMe(function(me) {
+				window.me = me;
+			});
+
+			window.frig.view = new views.FrigView({model: window.frig});
+			window.frig.view.render();
+			
+		});
+		
 		
 	}
 });
 
-var Router = Backbone.Router.extend({
-	routes: {
-		'': 'default'
-	}
-});
-
-window.loadFromFile = function(file) {
+window.loadFromFile = function(code,file) {
 	$.getJSON(file, function(words) {
 		window.words = words;
-		now.server.pump(words);
+		now.server.pump(code,words);
 	});
 }
 
 $(function() { //jQuery load
-	
-	
-	//console.log($.browser);	
-	
-	if ($.browser.msie) {
+
+	if ($.browser.msie) { // if bad browser, redirect
 		document.location.href = 'bad.html';
 	}
 	
@@ -68,6 +98,15 @@ $(function() { //jQuery load
 					break;
 				}
 				break;
+			case 'frig':
+				switch (method) {
+					case 'read':
+						now.server.getLatest(function(f) {
+							window.frig = f;
+						});
+						break;
+				}
+				
 		};
 		//console.log('client sync called',method,model);
 	};
@@ -75,60 +114,9 @@ $(function() { //jQuery load
 	now.ready(function(){
 		
 		window.router = new Router();
-	  window.session = new Session();
-	
-		window.localStorage.frigInfo = JSON.stringify({
-			lastClientId: now.core.clientId
-		});
 		
-		now.server.connectClient(now.core.clientId,'fam',function(c) {
-			
-			
-			window.frig = new kitchen.Frig();
-			
-			
-			now.server.load('xxx',function(res) { // load a particular frig from the server
-				
-				console.log(res);
-				
-				
-				
-				window.frig.mags.fetch();
-				window.frig.clients.fetch();
-				
-				window.getMe = function(cb) { // function to quickly get my client object
-					window.frig.clients.getByClientId(now.core.clientId, cb);
-				}
-
-				window.getMe(function(me) {
-					window.me = me;
-				});//console.log
-
-				window.frig.view = new kitchen.FrigView({model: window.frig});
-				window.frig.view.render();
-
-				//console.log(window.frig.clients);
-				//window.frig.cview = new kitchen.ClientsView({collection: window.frig.clients});
-
-				window.frig.attributes.config.bg.style = {
-					position: 'fixed',
-					top: '0px',
-					bottom: '0px',
-					left: '0px',
-					right: '0px',
-					'background-image': 'url("/images/bg.png")',
-					opacity: '0.5',
-					'-moz-user-select': 'none',
-					'-webkit-user-select': 'none'
-				}
-
-				window.credits = new kitchen.CreditsView();
-				
-				
-			}); // end frig server load block
-			
-			
-		});
+		Backbone.history.start()
+	  		
 	
 		now.client = {
 			
@@ -168,6 +156,7 @@ $(function() { //jQuery load
 				});
 			}
 		}
+	
 	});
 	
 	
