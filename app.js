@@ -41,7 +41,8 @@ var ObjectId = Schema.ObjectId;
 
 var FrigSchema = new Schema({
 	code: String,
-	data: {any: {}}
+	attrs: {any: {}},
+	collections: {any: {}}
 });
 
 mongoose.model('frig',FrigSchema);
@@ -52,14 +53,34 @@ var frig = new ktch.Frig();
 var frigs = [];
 var clientGroups = [];
 
-frig.save = function() {
-	console.log('saving frig');
-	// frigModel.findOne({code: this.get('code')})
-}
-
-frig.load = function(code,cb) {
-	console.log('loading frig '+code);
-	cb('loading frig '+code);
+Backbone.sync = function(method,model,options) {
+	console.log('Server sync called ',method,JSON.stringify(model));
+	switch (method) {
+		case 'create':
+			model.id = model.get('code');
+			var fr = new frigModel({
+				code: model.id,
+				data: model.xport()
+			});
+			fr.save(function(err) {
+				console.log(err?'error creating':'created!!');
+			});
+			break;
+		case 'update':
+			frigModel.findOne({code: model.id},function(err,fr) {
+				fr.toObject().data = model.xport();
+				fr.save(function(err) {
+					console.log(err?'error updating':'updated!!');
+				});
+			});
+			break;
+		case 'read':
+			frigModel.findOne({code: model.id},function(err,fr) {
+				model.mport(fr.toObject().data);
+				console.log('fetched!!');
+			});
+			break;
+	}
 }
 
 
@@ -78,10 +99,11 @@ traverse = function(o,func) {
 
 svr = {
 	
-	saveNew: function(code,cb) {
+	addToDB: function(code,cb) {
+		var frx = frigs[code].xport();
 		var f = new frigModel({
-			code: code, 
-			data: frigs[code].xport()
+			code: code,
+			data: frx
 		});
 		console.log(f);
 		f.save(function(resp) {
@@ -89,10 +111,18 @@ svr = {
 			cb(resp);
 		});
 	},
+	
+	saveToDB: function(code,cb) {
+		frigs[code].save();
+	},
 
 	pump: function(code,configJSON) {
 		
 		var wordArr = [];
+		
+		if (!frigs[code]) { 
+			frigs[code] = new ktch.Frig({code: code});
+		}
 		
 		traverse(configJSON.words,function(k,w) {
 			if (_.isString(w)) {
@@ -134,7 +164,6 @@ svr = {
 		m.lastTouchedBy = 'server';
 		//console.log('ltb changed '+JSON.stringify(m));
 		frigs[code].mags.get(m.id).set(m,{silent:true});
-		frigs[code].save();
 		everyone.exclude([clientId]).now.client.updateMag(m);
 	},
 	
@@ -144,7 +173,6 @@ svr = {
 		frigs[code].clients.getByClientId(c.clientId,function(cl) {
 			cl.set(c,{silent:true});
 		});
-		frigs[code].save();
 		everyone.exclude([c.clientId]).now.client.updateClient(c);
 	},
 	
@@ -152,15 +180,17 @@ svr = {
 		this.mags = mags;
 	},
 	
+	getSFrig: function(code,cb) {
+		cb(frigs[code].xport());
+	},
+	
 	getFrig: function(code,cb) {
 		if (typeof(frigs[code]) == 'undefined') {
 			console.log('having to get fridge from db...'+code);
-			frigModel.findOne({code: code}, function(err,fr) {
-				console.log('inside the anon function');
-				frigs[code] = new ktch.Frig();
-				frigs[code].mport(fr.data.toObject());
-				cb(frigs[code].xport());
-			});
+			frigs[code] = new ktch.Frig();
+			frigs[code].id = code;
+			frigs[code].fetch();
+			cb(frigs[code].xport());
 		} else {
 			cb(frigs[code].xport());
 		}
@@ -187,7 +217,7 @@ svr = {
 				if (grp.exclude([clientId]).now.client) {
 					grp.exclude([clientId]).now.client.addClient(c);
 				}
-				cb(c,f);
+				cb(c,frigs[code].xport());
 			});
 			
 		});
@@ -196,6 +226,10 @@ svr = {
 };
 
 everyone.now.server = svr;
+
+nowjs.on('connect',function() {
+	console.log(this.user.clientId+' just connected');
+});
 
 nowjs.on('disconnect',function() {
 	var self = this.user;

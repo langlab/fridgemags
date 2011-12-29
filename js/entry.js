@@ -13,19 +13,81 @@ window.getMe = function(cb) { // function to quickly get my client object
 	window.frig.clients.getByClientId(now.core.clientId, cb);
 }
 
+Backbone.sync = function(method,model,options) {
+	switch (model.modelType) {
+		case 'mag':
+			//console.log('client-side syncing mag info')
+			switch (method) {
+				case 'read':
+					//console.log('fetching mags from the server..');
+					now.server.getMags(now.core.clientId,function(mgs) { 
+						//console.log('recved mags ',mgs)
+						frig.mags.reset();
+						frig.mags.add(mgs);
+					});
+					break;
+				case 'update':
+					//console.log('sending updated mag to the server ',model.attributes);
+					now.server.updateMag(now.core.clientId, model.attributes, function() {
+
+					});
+					break;
+			};
+			break
+		case 'client':
+			//console.log('client-side syncing client info');
+			switch (method) {
+				case 'read':
+					now.server.getClients(now.core.clientId,function(cls) { 
+						//console.log('recved mags ',cls)
+						frig.clients.reset();
+						frig.clients.add(cls);
+					});
+				break;
+				case 'update':
+					//console.log('sending updated client to the server ',model.attributes);
+					now.server.updateClient(model.attributes, function() {
+						
+					});
+				break;
+			}
+			break;
+		case 'frig':
+			switch (method) {
+				case 'read':
+					now.server.getLatest(function(f) {
+						window.frig = f;
+					});
+					break;
+			}
+			
+	};
+	//console.log('client sync called',method,model);
+};
 
 var Router = Backbone.Router.extend({
 	
 	routes: {
-		'go/:code': 'go',
-		'intro':'intro'
+		'go/:code': 'go'	
 	},
 	
 	go: function(code) {
+		// if (window.alreadyConnected) {
+		// 	window.location.reload();
+		// }	
+		
+		//window.alreadyConnected = true;
+			
+		localStorage['fS'+code] = '';
+		
 		if (!localStorage['fS'+code]) { // if client previously visited this page
 			var introView = new views.IntroView();
 		}
-		var introView = new views.IntroView();
+		
+		// if (window.frig) {
+		// 	now.server.disconnectClient(now.core.clientId,code)
+		// }
+		
 		now.server.connectClient(now.core.clientId,code,function(newClient,updatedFrig) {
 			console.log(updatedFrig);
 			window.frig = new kitchen.Frig();
@@ -39,9 +101,8 @@ var Router = Backbone.Router.extend({
 
 			window.frig.view = new views.FrigView({model: window.frig});
 			window.frig.view.render();
-			
+			window.creditsView = new views.CreditsView();
 		});
-		
 		
 	}
 });
@@ -58,58 +119,6 @@ $(function() { //jQuery load
 	if ($.browser.msie) { // if bad browser, redirect
 		document.location.href = 'bad.html';
 	}
-	
-	Backbone.sync = function(method,model,options) {
-		switch (model.modelType) {
-			case 'mag':
-				//console.log('client-side syncing mag info')
-				switch (method) {
-					case 'read':
-						//console.log('fetching mags from the server..');
-						now.server.getMags(now.core.clientId,function(mgs) { 
-							//console.log('recved mags ',mgs)
-							frig.mags.reset();
-							frig.mags.add(mgs);
-						});
-						break;
-					case 'update':
-						//console.log('sending updated mag to the server ',model.attributes);
-						now.server.updateMag(now.core.clientId, model.attributes, function() {
-
-						});
-						break;
-				};
-				break
-			case 'client':
-				//console.log('client-side syncing client info');
-				switch (method) {
-					case 'read':
-						now.server.getClients(now.core.clientId,function(cls) { 
-							//console.log('recved mags ',cls)
-							frig.clients.reset();
-							frig.clients.add(cls);
-						});
-					break;
-					case 'update':
-						//console.log('sending updated client to the server ',model.attributes);
-						now.server.updateClient(model.attributes, function() {
-							
-						});
-					break;
-				}
-				break;
-			case 'frig':
-				switch (method) {
-					case 'read':
-						now.server.getLatest(function(f) {
-							window.frig = f;
-						});
-						break;
-				}
-				
-		};
-		//console.log('client sync called',method,model);
-	};
 	
 	now.ready(function(){
 		
@@ -134,7 +143,7 @@ $(function() { //jQuery load
 			},
 			
 			updateMag: function(m) {
-				//console.log('recvd update from the server... ',m);
+				console.log('recvd update from the server... ',m);
 				var mag = window.frig.mags.get(m.id);
 				mag.set(m,{silent:true});
 				$(mag.view.el).remove();
@@ -142,14 +151,14 @@ $(function() { //jQuery load
 			},
 			
 			addClient: function(c) {
-				//console.log('recvd new client from server...',c);
+				console.log('recvd new client from server...',c);
 				var cl = new kitchen.Client(c);
 				window.frig.clients.add(cl);
 				cl.view.render();
 			},
 			
 			removeClient: function(cid) {
-				//console.log('CLIENT LOGOFF from server...',cid)
+				console.log('CLIENT LOGOFF from server...',cid)
 				window.frig.clients.getByClientId(cid,function(cl) {
 					cl.view.el.hide('explode').remove();
 					window.frig.clients.remove(cl);

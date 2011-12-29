@@ -1,13 +1,7 @@
 var r = require('mersenne');
 var gpw = require('./gpw');
 
-Backbone.sync = function(method,model,options) {
-	//console.log('server sync called ',method,JSON.stringify(model));
-	switch (method) {
-		case 'update':
-			break;
-	}
-}
+
 
 var BModel = Backbone.Model.extend({
   // builds and return a simple object ready to be JSON stringified
@@ -99,24 +93,32 @@ var Frig = BModel.extend({
 // clients: collection of clients that have ever connected
 	
 	initialize: function() {
-		if (typeof(this._id) !== 'undefined') {
-			this.id = this._id;
-			this.set({id: this_id});
+		// if (typeof(this._id) !== 'undefined') {
+		// 	this.id = this._id;
+		// 	this.set({id: this_id});
+		// }
+		
+		// if (typeof(this.get('code') == 'undefined')) {
+		// 	this.set({code: this.options.code});
+		// }
+		
+		if (typeof(this.get('config') == 'undefined')) {
+			this.set({config: {
+				bg: {
+					style: {
+
+					},
+					html: 'rearrange creatively',
+					relSize: 0.1
+				},
+				clients: {
+					colors: ['#9C0','#639','#69C','#FF6FCF','#FF8000','#800040','#800040','#191919','#699']
+				}
+			}});
 		}
+		
 		this.mags = new Mags();
 		this.clients = new Clients();
-		this.set({config: {
-			bg: {
-				style: {
-					
-				},
-				html: 'rearrange creatively',
-				relSize: 0.1
-			},
-			clients: {
-				colors: ['#9C0','#639','#69C','#FF6FCF','#FF8000','#800040','#800040','#191919','#699']
-			}
-		}});
 	}
 	
 });
