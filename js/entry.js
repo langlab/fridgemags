@@ -72,11 +72,8 @@ var Router = Backbone.Router.extend({
 	},
 	
 	go: function(code) {
-		// if (window.alreadyConnected) {
-		// 	window.location.reload();
-		// }	
 		
-		//window.alreadyConnected = true;
+		console.log('doing route: '+code);
 			
 		localStorage['fS'+code] = '';
 		
@@ -84,12 +81,8 @@ var Router = Backbone.Router.extend({
 			var introView = new views.IntroView();
 		}
 		
-		// if (window.frig) {
-		// 	now.server.disconnectClient(now.core.clientId,code)
-		// }
-		
 		now.server.connectClient(now.core.clientId,code,function(newClient,updatedFrig) {
-			console.log(updatedFrig);
+			console.log('frig from server: ',updatedFrig);
 			window.frig = new kitchen.Frig();
 			window.frig.mport(updatedFrig);
 			window.client = newClient;
@@ -98,10 +91,14 @@ var Router = Backbone.Router.extend({
 			window.getMe(function(me) {
 				window.me = me;
 			});
+			
+			//event aggregator to allow views to communicate, aka "what's up?"
+			var tsup = _.extend({}, Backbone.Events); 
+			
 
-			window.frig.view = new views.FrigView({model: window.frig});
+			window.frig.view = new views.FrigView({model: window.frig, tsup: tsup});
 			window.frig.view.render();
-			window.creditsView = new views.CreditsView();
+			window.creditsView = new views.CreditsView({tsup: tsup});
 		});
 		
 	}

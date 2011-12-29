@@ -93,14 +93,7 @@ var Frig = BModel.extend({
 // clients: collection of clients that have ever connected
 	
 	initialize: function() {
-		// if (typeof(this._id) !== 'undefined') {
-		// 	this.id = this._id;
-		// 	this.set({id: this_id});
-		// }
-		
-		// if (typeof(this.get('code') == 'undefined')) {
-		// 	this.set({code: this.options.code});
-		// }
+
 		
 		if (typeof(this.get('config') == 'undefined')) {
 			this.set({config: {
@@ -214,9 +207,12 @@ var Clients = Backbone.Collection.extend({
 	
 });
 
+
 exports.Frig = Frig;
 exports.Client = Client;
 exports.Clients = Clients;
 exports.Mag = Mag;
 exports.Mags = Mags;
+exports.Backbone = Backbone;
+
 

@@ -5,9 +5,19 @@ var sys = require("sys")
 	, fs = require('fs')
 	, mongoose = require('mongoose')
 	, Schema = mongoose.Schema
-	, db = mongoose.connect('mongodb://localhost/frig');
+	, db = mongoose.connect('mongodb://localhost/frig')
+	, net = require('net')
+	, repl = require('repl');
  
-// var Backbone = require('backbone');
+
+// a repl server to check server values
+connections = 0;
+net.createServer(function (socket) {
+  connections += 1;
+  repl.start("fmag> ", socket);
+}).listen("/tmp/fmags");
+
+nj = nowjs; // expose to repl
 
 var skitchen = require('./js/skitchen.js');
 
@@ -49,9 +59,13 @@ mongoose.model('frig',FrigSchema);
 var frigModel = mongoose.model('frig');
 
 var ktch = skitchen.kitchen;
-var frig = new ktch.Frig();
-var frigs = [];
-var clientGroups = [];
+
+frigs = {}; // a structure to hold all of the currently open frig 
+
+clientGroups = {}; // a structure to keep track of which frig group a now clientId is in
+
+tsup = _.extend({}, Backbone.Events); // event aggregator
+
 
 Backbone.sync = function(method,model,options) {
 	console.log('Server sync called ',method,JSON.stringify(model));
@@ -78,6 +92,7 @@ Backbone.sync = function(method,model,options) {
 			frigModel.findOne({code: model.id},function(err,fr) {
 				model.mport(fr.toObject().data);
 				console.log('fetched!!');
+				tsup.trigger('frigFetchComplete');
 			});
 			break;
 	}
@@ -95,8 +110,7 @@ traverse = function(o,func) {
 }
 
 
-//console.log(JSON.stringify(frig.mags.models));
-
+// functions to call from the client side
 svr = {
 	
 	addToDB: function(code,cb) {
@@ -143,10 +157,6 @@ svr = {
 		});
 	},
 	
-	load: function(code,cb) {
-		frig.load(code,cb);
-	},
-	
 	add: function(clientId,m) {
 		if (this.mags) { this.mags.push(m); } else { this.mags = [m]};
 		//console.log('recvd add from client '+JSON.stringify(m));
@@ -160,22 +170,28 @@ svr = {
 	
 	updateMag: function(clientId,m) {
 		var code = clientGroups[clientId];
+		var grp = nowjs.getGroup(code);
 		//console.log('recvd mag update from client '+clientId,JSON.stringify(m));
 		m.lastTouchedBy = 'server';
 		//console.log('ltb changed '+JSON.stringify(m));
 		frigs[code].mags.get(m.id).set(m,{silent:true});
-		everyone.exclude([clientId]).now.client.updateMag(m);
+		if (grp.exclude([clientId]).now.client) { // notify all other clients on this frig about the mag move
+			grp.exclude([clientId]).now.client.updateMag(m);
+		}
 	},
 	
 	updateClient: function(c) {
 		var code = clientGroups[c.clientId];
+		var grp = nowjs.getGroup(code);
 		//console.log('recvd client update from client '+c.clientId,JSON.stringify(c));
 		frigs[code].clients.getByClientId(c.clientId,function(cl) {
 			cl.set(c,{silent:true});
 		});
-		everyone.exclude([c.clientId]).now.client.updateClient(c);
+		if (grp.exclude([c.clientId]).now.client) { // notify all other clients on this frig about the client move
+			grp.exclude([c.clientId]).now.client.updateClient(c);
+		}
 	},
-	
+
 	saveAll: function(clientId,mags) {
 		this.mags = mags;
 	},
@@ -190,7 +206,10 @@ svr = {
 			frigs[code] = new ktch.Frig();
 			frigs[code].id = code;
 			frigs[code].fetch();
-			cb(frigs[code].xport());
+			tsup.bind('frigFetchComplete',function() { // gotta wait until the fetch is done before sending it back! see the event binding at Backbone.sync read override above
+				cb(frigs[code].xport());
+				tsup.unbind('frigFetchComplete');
+			});
 		} else {
 			cb(frigs[code].xport());
 		}
@@ -207,16 +226,37 @@ svr = {
 		});
 	},
 	
+	disconnectClient: function(clientId,code,cb) {
+		if (frigs[code]) {
+			frigs[code].clients.disconnect(clientId);
+			frigs[code].save(); // when a user disconnects, save a copy of the current frig status for this code to the database
+		}
+		
+		var grp = nowjs.getGroup(code); // find the frig group that the user was in
+		grp.count(function(c) { // if there are any members left there...
+			if (c) {
+				grp.now.client.removeClient(clientId); // notify them that the user is gone
+			}
+		});
+
+		delete clientGroups[clientId]; // make sure that the user's client group in the index array is reset to null
+		cb();
+	},
+	
 	connectClient: function(clientId,code,cb) {
+		console.log('connecting client '+clientId+' to '+code);
 		var th = this;
-		var grp = nowjs.getGroup(code);
-		grp.addUser(clientId);
-		clientGroups[clientId] = code;
+		
+		var grp = nowjs.getGroup(code); // get the now group for the frig to connect to
+		grp.addUser(clientId); // add the now user to the group
+		
 		svr.getFrig(code, function(f) {
 			frigs[code].clients.connect(clientId,function(c) {
 				if (grp.exclude([clientId]).now.client) {
 					grp.exclude([clientId]).now.client.addClient(c);
 				}
+				clientGroups[clientId] = code;
+				//console.log('returning '+frigs[code].xport)
 				cb(c,frigs[code].xport());
 			});
 			
@@ -233,16 +273,11 @@ nowjs.on('connect',function() {
 
 nowjs.on('disconnect',function() {
 	var self = this.user;
-	console.log(self.clientId+' just disconnected');
 	var grpCode = clientGroups[self.clientId];
-	if (frigs[grpCode]) {
-		frigs[grpCode].clients.disconnect(self.clientId);
-		frigs[grpCode].save();
-	}
-	var grp = nowjs.getGroup(grpCode);
-	grp.count(function(c) {
-		if (c) {
-			grp.now.client.removeClient(self.clientId);
-		}
+	
+	
+	svr.disconnectClient(self.clientId,grpCode,function() {
+		console.log(self.clientId+' just disconnected from '+grpCode);
 	});
+	
 });
