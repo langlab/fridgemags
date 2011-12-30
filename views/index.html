@@ -8,9 +8,31 @@
 
 <script id="introT" type="text/template" charset="utf-8">
 	<div class="intro">
-		<div class="instr">Drag the word magnets around the fridge to make a poem or leave a message to share. You can rotate a magnet a little by hovering over it and using the left and right arrow keys on your keyboard. You will see other people who happen to be connected at the same time as you represented by colored dots. Be creative and have fun! In the spirit of real fridge magnets, all actvity is anonymous.</div>
-		<button>ok, let&#39;s go!</button>
+		<div class="instr">
+			<p>Drag the <span class='mag'>word magnets</span> around the fridge to make a poem or leave a message to share.</p>
+			<p>You can rotate a magnet a little by hovering over it and using the left and right arrow keys on your keyboard. You and the other people who happen to be connected at the same time will be represented by colored dots like the ones below. </p>
+			<p>Be creative and have fun! In the spirit of real fridge magnets, all actvity is anonymous, of course.</p>
+			
+			<p>But first, pick your color: <span class='cp'></span></p>
+			<button class='close'>ok, let&#39;s go!</button>
+		</div>
 	</div>
+</script>
+
+<script id="makeT" type="text/template" charset="utf-8">
+	<div class="make">
+	<button class='close'>x</button>
+		<div class="instr">
+			<h3>Make your own <span class='mag'>magnet</span> fridge!</h3>
+			<p>Type your magnets down here &darr;</p>
+			<ul class='tagList'>
+			</ul>
+			<p>you have <span class='wordCount'>no magnets</span> so far..<span class='comment'> get started.</span><a href='' class='url'></a></p><button class='makeIt'>make it!</button>
+			
+		</div>
+		
+	</div>
+	
 </script>
 
 <body>	
@@ -29,6 +51,7 @@
 <script src="/javascripts/jquery.min.js"></script>
 <script src="/javascripts/jquery-ui.min.js"></script>
 <script src="/javascripts/jquery.ui.touch.js" type="text/javascript" charset="utf-8"></script>
+<script src="/javascripts/tag-it.js" type="text/javascript" charset="utf-8"></script>
 <script src="/javascripts/underscore.js" type="text/javascript" charset="utf-8"></script>
 <script src="/javascripts/backbone.js" type="text/javascript" charset="utf-8"></script>
 <script src="nowjs/now.js"></script>

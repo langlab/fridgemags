@@ -51,8 +51,7 @@ var ObjectId = Schema.ObjectId;
 
 var FrigSchema = new Schema({
 	code: String,
-	attrs: {any: {}},
-	collections: {any: {}}
+	fData: {any: {}}
 });
 
 mongoose.model('frig',FrigSchema);
@@ -68,29 +67,31 @@ tsup = _.extend({}, Backbone.Events); // event aggregator
 
 
 Backbone.sync = function(method,model,options) {
-	console.log('Server sync called ',method,JSON.stringify(model));
+	console.log('Server sync called ',method,model.id);
 	switch (method) {
 		case 'create':
 			model.id = model.get('code');
 			var fr = new frigModel({
 				code: model.id,
-				data: model.xport()
+				fData: model.xport()
 			});
 			fr.save(function(err) {
 				console.log(err?'error creating':'created!!');
 			});
 			break;
 		case 'update':
-			frigModel.findOne({code: model.id},function(err,fr) {
-				fr.toObject().data = model.xport();
-				fr.save(function(err) {
-					console.log(err?'error updating':'updated!!');
+			//console.log('updating: '+model.id+' with '+JSON.stringify(model.xport()));
+			frigModel.findOne({code: model.id},function(err,f) {
+				f.fData = model.xport();
+				f.save(function(err) {
+					console.log(err?err:'success updated '+model.id);
 				});
 			});
+			// frigModel.update({code: model.id},{$set: {data: model.xport(), last: Date.now()}});
 			break;
 		case 'read':
 			frigModel.findOne({code: model.id},function(err,fr) {
-				model.mport(fr.toObject().data);
+				model.mport(fr.fData.toObject());
 				console.log('fetched!!');
 				tsup.trigger('frigFetchComplete');
 			});
@@ -126,6 +127,30 @@ svr = {
 		});
 	},
 	
+	makeNew: function(wordArr,cb) {
+		
+		var code = ktch.gpw.generate(6);
+		
+		if (!frigs[code]) { 
+			frigs[code] = new ktch.Frig({code: code});
+		}
+		
+		frigs[code].mags.reset();
+		
+		wordArr.forEach(function(w) {
+			var m = w.match(/^([a-zA-Z\?\.\$!]*)([0-9])$/);
+			if (m) {
+				for (i=0;i<m[2];i++) {
+					frigs[code].mags.addWord(m[1]);
+				}
+			} else {
+				frigs[code].mags.addWord(w);
+			}
+		});
+		
+		cb(code);
+	},
+	
 	saveToDB: function(code,cb) {
 		frigs[code].save();
 	},
@@ -138,7 +163,7 @@ svr = {
 			frigs[code] = new ktch.Frig({code: code});
 		}
 		
-		traverse(configJSON.words,function(k,w) {
+		traverse(configJSON.words,function(k,w) { // get all of the strings out of the words structure
 			if (_.isString(w)) {
 				wordArr.push(w);
 			}
@@ -236,6 +261,9 @@ svr = {
 		grp.count(function(c) { // if there are any members left there...
 			if (c) {
 				grp.now.client.removeClient(clientId); // notify them that the user is gone
+			} else {
+				delete frigs[code]; // if there are no more users, delete the frig in  memory
+				// question: would it be better to do a setTimeout instead? and clear the timeOut when someone else connects?
 			}
 		});
 

@@ -1,6 +1,6 @@
 @import url(http://fonts.googleapis.com/css?family=Crete+Round&subset=latin,latin-ext);
 @import url(http://fonts.googleapis.com/css?family=Comfortaa:400,700);
-* {
+div, span {
 	-moz-user-select: none;-webkit-user-select: none;
 }
 
@@ -69,6 +69,7 @@ a {
 	cursor: move;
 	overflow: hidden;
 	-moz-user-select: none;-webkit-user-select: none;
+	font: 14px "Crete Round", Helvetica, Arial, sans-serif;
 }
 
 .mag img {
@@ -146,13 +147,13 @@ a {
 	display: none;
 }
 
-.introCont {
+.dialogCont {
 	position: fixed;
 	top: 0px; left: 0px; right: 0px; bottom: 0px;
 	background-color: rgba(0,0,0,0.5);
 }
 
-.intro {
+.dialogMain {
 	position: absolute;
 	width: 50%;
 	height: 50%;
@@ -162,4 +163,141 @@ a {
 	padding: 15px;
 	font-size: 14px;
 	font-family: Helvetica, Arial;
+	border-radius: 2px;
+}
+
+.dialogMain button {
+	position: absolute;
+	right: 4px; bottom: 4px;
+	border: 2px solid green;
+	color: green;
+	background-color: white;
+	cursor: pointer;
+	display: none;
+}
+
+.dialogMain button:hover {
+	color: white;
+	background-color: green;
+}
+
+.colorPicker {
+	background-color: none;
+	float: right;
+}
+
+.dialogMain .mag {
+	position: static;
+	cursor: none;
+}
+
+.colorSquare {
+	float: left;
+	border: 2px solid transparent;
+	padding: 2px;
+	margin: 2px;
+	width: 15px;
+	height: 15px;
+	opacity: 1;
+	border-radius: 14px;
+	cursor: pointer;
+}
+
+.colorSquare.sel, .colorSquare.sel:hover {
+	border: 2px groove black;
+}
+
+.colorSquare:hover {
+	border: 2px solid pink;
+}
+
+.make .wordList {
+	width: 80%;
+	min-height: 50px;
+}
+
+.make .makeIt {
+	display: none;
+}
+
+.make li {
+	list-style: none;
+}
+
+.make .tagit-choice {
+	float: left;
+	border: 1px solid black;
+	border-top: 1px solid #999;
+	border-left: 1px solid #999;
+	padding: 2px;
+	padding-right: 8px;
+	margin: 2px;
+	cursor: pointer;
+	background-color: white;
+	overflow: hidden;
+	-moz-user-select: none;-webkit-user-select: none;
+	font: 16px "Crete Round", Helvetica, Arial, sans-serif;
+}
+
+.make input.ui-widget-content {
+	font-size: 16px;
+	padding: 2px;
+	width: 75px;
+	border: 1px solid black;
+	border-top: 1px solid #999;
+	border-left: 1px solid #999;
+	font: 16px "Crete Round", Helvetica, Arial, sans-serif;
+	outline: none;
+}
+
+.make .tagit-label {
+	padding-right: 4px;
+}
+
+.make .remove {
+	background-color: #FFD8D3;
+}
+
+.make .tagit-close {
+	color: red;
+	padding-right: 2px;
+	font-weight: bold;
+}
+
+.make ul.tagit {
+	max-height: 200px;
+	overflow-y: auto;
+	padding: 4px;
+	border-top: 1px dotted #ccc;
+	border-bottom: 1px dotted #ccc;
+	
+}
+
+.make .url {
+	color: #0080FF;
+	font-weight: bold;
+	display: none;
+	font-size: 14px;
+}
+
+.make .wordCount, .make .comment {
+	color: red;
+}
+
+.make .wordCount.go, .make .comment.go {
+	color: green;
+	font-weight: bold;
+}
+
+.make .wordCount.warning, .make .comment.warning {
+	color: orange;
+}
+
+.make button.close {
+	border: none;
+	background-color: white;
+	color: red;
+	position: absolute;
+	top: 3px; right: 3px;
+	display: inline;
 }

@@ -68,17 +68,24 @@ Backbone.sync = function(method,model,options) {
 var Router = Backbone.Router.extend({
 	
 	routes: {
-		'go/:code': 'go'	
+		'go/:code': 'go',
+		'make':'make'
+	},
+	
+	make: function() {
+		window.makeView = new views.MakeView();
+		window.makeView.render();
 	},
 	
 	go: function(code) {
 		
 		console.log('doing route: '+code);
-			
-		localStorage['fS'+code] = '';
 		
-		if (!localStorage['fS'+code]) { // if client previously visited this page
+		// delete window.localStorage['fS'+code];
+		
+		if (!window.localStorage['fS'+code]) { // if client has not previously visited this page
 			var introView = new views.IntroView();
+			introView.render();
 		}
 		
 		now.server.connectClient(now.core.clientId,code,function(newClient,updatedFrig) {

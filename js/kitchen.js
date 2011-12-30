@@ -214,5 +214,5 @@ exports.Clients = Clients;
 exports.Mag = Mag;
 exports.Mags = Mags;
 exports.Backbone = Backbone;
-
+exports.gpw = gpw;
 
