@@ -8,7 +8,7 @@ body {
   padding: 0px;
 	margin: 0px;
   font: 14px "Crete Round", Helvetica, Arial, sans-serif;
-	background-color: rgba(0,64,128,0.3);
+	background-color: #CCC;
 }
 
 a {
@@ -17,7 +17,7 @@ a {
 
 #frig {
 	position: fixed;
-	top: 2%; left: 2%; bottom: 2%; right: 2%;
+	top: 4%; left: 2%; bottom: 2%; right: 2%;
 	border: 2px groove rgba(0,0,0,0.1);
 	cursor: none;
 }
@@ -120,7 +120,7 @@ a {
 }
 
 .logo.hid {
-	top: 93%; right: 92%;
+	top: 93%; right: 90%;
 	-webkit-transform: rotate(30deg); -moz-transform: rotate(30deg);
 }
 
@@ -211,9 +211,10 @@ a {
 	border: 2px solid pink;
 }
 
-.make .wordList {
-	width: 80%;
-	min-height: 50px;
+.make .tagList {
+	position: absolute;
+	left: 10px; right: 10px;
+	top: 90px; bottom: 30px;
 }
 
 .make .makeIt {
@@ -278,6 +279,10 @@ a {
 	font-weight: bold;
 	display: none;
 	font-size: 14px;
+	position: absolute;
+	top: 15px; right: 35px;
+	padding: 3px; 
+	border: 1px dotted #ddd;
 }
 
 .make .wordCount, .make .comment {
@@ -298,6 +303,20 @@ a {
 	background-color: white;
 	color: red;
 	position: absolute;
-	top: 3px; right: 3px;
-	display: inline;
+	top: 3px; right: 3px; height: 20px;
+	font-size: 16px;
+}
+
+.make .bottomBar {
+	position: absolute;
+	bottom: 10px; left: 10px; right: 10px;
+}
+
+#makeYourOwn {
+	position: fixed;
+	top: 0px; right: 2%;
+	padding: 3px;
+	font-family: 'Comfortaa', Helvetica;
+	color: #004080;
+	cursor: pointer;
 }

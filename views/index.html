@@ -7,7 +7,7 @@
 </head>
 
 <script id="introT" type="text/template" charset="utf-8">
-	<div class="intro">
+	<div class="intro dialogMain">
 		<div class="instr">
 			<p>Drag the <span class='mag'>word magnets</span> around the fridge to make a poem or leave a message to share.</p>
 			<p>You can rotate a magnet a little by hovering over it and using the left and right arrow keys on your keyboard. You and the other people who happen to be connected at the same time will be represented by colored dots like the ones below. </p>
@@ -20,15 +20,17 @@
 </script>
 
 <script id="makeT" type="text/template" charset="utf-8">
-	<div class="make">
+	<div class="make dialogMain">
 	<button class='close'>x</button>
 		<div class="instr">
 			<h3>Make your own <span class='mag'>magnet</span> fridge!</h3>
-			<p>Type your magnets down here &darr;</p>
+			<p>Type at least 75 magnets down here&darr;</p>
 			<ul class='tagList'>
 			</ul>
-			<p>you have <span class='wordCount'>no magnets</span> so far..<span class='comment'> get started.</span><a href='' class='url'></a></p><button class='makeIt'>make it!</button>
-			
+			<div class='bottomBar'>
+				<p>you have <span class='wordCount'>no magnets</span> so far... <span class='comment'> get started.</p></span><button class='makeIt'>make it!</button>
+				<a href='' class='url' target='_blank'></a>
+			</div>
 		</div>
 		
 	</div>
@@ -38,7 +40,7 @@
 <body>	
 	<div class='bg'></div>
 	<div id="frig">
-		<div class="title">rearrange creatively</div>
+		<div class="title"></div>
 	</div>
 	<div id="geobot">
 		<img class="logo hid" src='/images/geobot.png'/>
@@ -47,6 +49,8 @@
 			<audio src='/audio/geobot.m4a'>
 		</div>
 	</div>
+	<a id='makeYourOwn' href='javascript:router.make()'>make your own fridge</a>
+	
 
 <script src="/javascripts/jquery.min.js"></script>
 <script src="/javascripts/jquery-ui.min.js"></script>

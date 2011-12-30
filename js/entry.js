@@ -5,14 +5,19 @@ window.lg = function (str) {
 	}
 }
 
+window.baseUrl = 'http://localhost:3000';
+
 window.kitchen = require('./kitchen');
 window.views = require('./views');
 
+//event aggregator to allow views to communicate, aka "what's up?"
+window.tsup = _.extend({}, Backbone.Events); 
 
 window.getMe = function(cb) { // function to quickly get my client object
 	window.frig.clients.getByClientId(now.core.clientId, cb);
 }
 
+// overriding the CRUD sync methods for client side objects in order to use nowjs
 Backbone.sync = function(method,model,options) {
 	switch (model.modelType) {
 		case 'mag':
@@ -73,24 +78,25 @@ var Router = Backbone.Router.extend({
 	},
 	
 	make: function() {
-		window.makeView = new views.MakeView();
+		window.makeView = new views.MakeView({tsup: tsup});
 		window.makeView.render();
 	},
 	
 	go: function(code) {
 		
 		console.log('doing route: '+code);
+		window.tsup.trigger('closeAll');
 		
-		// delete window.localStorage['fS'+code];
+		// delete window.localStorage['fS'+code]; // <- for testing intro window only
 		
 		if (!window.localStorage['fS'+code]) { // if client has not previously visited this page
-			var introView = new views.IntroView();
+			var introView = new views.IntroView({tsup: tsup});
 			introView.render();
 		}
 		
 		now.server.connectClient(now.core.clientId,code,function(newClient,updatedFrig) {
 			console.log('frig from server: ',updatedFrig);
-			window.frig = new kitchen.Frig();
+			window.frig = new kitchen.Frig({tsup: tsup});
 			window.frig.mport(updatedFrig);
 			window.client = newClient;
 			window.localStorage['fS'+code] = now.core.clientId;
@@ -99,10 +105,6 @@ var Router = Backbone.Router.extend({
 				window.me = me;
 			});
 			
-			//event aggregator to allow views to communicate, aka "what's up?"
-			var tsup = _.extend({}, Backbone.Events); 
-			
-
 			window.frig.view = new views.FrigView({model: window.frig, tsup: tsup});
 			window.frig.view.render();
 			window.creditsView = new views.CreditsView({tsup: tsup});
@@ -175,7 +177,6 @@ $(function() { //jQuery load
 	
 	
 });
-
 
 jQuery.fn.center = function () {
     this.css("position","absolute");
