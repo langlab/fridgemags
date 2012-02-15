@@ -2,7 +2,7 @@
 
 Fridgemags allows you to create a screen/fridge of draggable magnets that update on all of the connected clients in real time.
 
-This was a fun project I did as a proof of concept and to try out some new skills and techniques I just learned, i.e.:
+This was a fun project I did as a proof of concept for some new skills and techniques I just learned, i.e.:
 
 - It was my first Backbone.js app.
 - I used nowjs to update the fridge state accross clients in real time.
